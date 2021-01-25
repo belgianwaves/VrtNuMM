@@ -1,0 +1,114 @@
+CREATE TABLE User(
+    email TEXT NOT NULL PRIMARY KEY,
+    password TEXT NOT NULL
+);
+
+insertUser:
+INSERT INTO User(email, password) VALUES(?, ?);
+
+selectUsers:
+SELECT * FROM User;
+
+CREATE TABLE Position(
+    programUrl TEXT NOT NULL,
+    title TEXT NOT NULL,
+    publicationId TEXT NOT NULL,
+    videoId TEXT NOT NULL,
+    position INTEGER NOT NULL,
+    duration INTEGER NOT NULL,
+    lastSeen INTEGER NOT NULL
+);
+
+insertPosition:
+INSERT INTO Position(programUrl, title, publicationId, videoId, position, duration, lastSeen) VALUES(?, ?, ?, ?, 0, 0, ?);
+
+updatePosition:
+UPDATE Position
+SET position = ?, duration = ?, lastSeen = ?
+WHERE programUrl = ? AND publicationId = ? AND videoId = ?;
+
+selectPosition:
+SELECT * FROM Position WHERE programUrl = ? AND publicationId = ? AND videoId = ?;
+
+CREATE TABLE Program(
+    programUrl TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    desc TEXT NOT NULL,
+    thumbnail TEXT NOT NULL,
+    favourite INTEGER AS Boolean DEFAULT 0 NOT NULL,
+    created INTEGER NOT NULL
+);
+
+selectPrograms:
+SELECT * FROM Program;
+
+selectProgram:
+SELECT * FROM Program WHERE programUrl = ?;
+
+insertProgram:
+INSERT INTO Program(programUrl, title, desc, thumbnail, favourite, created) VALUES (?, ?, ?, ?, 0, ?);
+
+updateProgram:
+UPDATE Program
+SET title = ?, desc = ?, thumbnail = ?
+WHERE programUrl = ?;
+
+setProgramFavourite:
+UPDATE Program
+SET favourite = ?
+WHERE programUrl = ?;
+
+CREATE TABLE Episode(
+    programUrl TEXT NOT NULL,
+    publicationId TEXT NOT NULL,
+    videoId TEXT NOT NULL,
+    title TEXT NOT NULL,
+    shortDescription TEXT NOT NULL,
+    desc TEXT NOT NULL,
+    seasonName TEXT NOT NULL,
+    episodeNumber INTEGER AS Short NOT NULL,
+    videoThumbnailUrl TEXT NOT NULL
+);
+
+selectEpisodesForProgram:
+SELECT * FROM Episode WHERE programUrl = ?;
+
+selectEpisode:
+SELECT * FROM Episode WHERE programUrl = ? AND publicationId = ? AND videoId = ?;
+
+insertEpisode:
+INSERT INTO Episode(programUrl, publicationId, videoId, title, shortDescription, desc, seasonName, episodeNumber, videoThumbnailUrl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateEpisode:
+UPDATE Episode
+SET title = ?, shortDescription = ?, desc = ?, seasonName = ?, episodeNumber = ?, videoThumbnailUrl = ?
+WHERE programUrl = ? AND publicationId = ? AND videoId = ?;
+
+CREATE TABLE CategoryEntry(
+    name TEXT NOT NULL,
+    programUrl TEXT NOT NULL
+);
+
+selectCategoryNames:
+SELECT DISTINCT(name) FROM CategoryEntry;
+
+selectProgramsForCategory:
+SELECT p.programUrl, p.title, p.desc, p.thumbnail, p.favourite, p.created FROM Program p, CategoryEntry c WHERE c.name = ? AND c.programUrl = p.programUrl;
+
+clearCategory:
+DELETE FROM CategoryEntry WHERE name = ?;
+
+insertCategoryEntry:
+INSERT INTO CategoryEntry(name, programUrl) VALUES (?, ?);
+
+selectWatchedPrograms:
+SELECT DISTINCT pr.programUrl, pr.title, pr.desc, pr.thumbnail, pr.favourite, pr.created FROM Program pr, Position po WHERE pr.programUrl = po.programUrl ORDER BY po.lastSeen DESC;
+
+selectFavouritePrograms:
+SELECT * FROM Program WHERE favourite != 0 ORDER BY title;
+
+selectRecentPrograms:
+SELECT * FROM Program WHERE created > ?;
+
+selectWatchedEpisodesForProgram:
+SELECT e.programUrl, e.publicationId, e.videoId, e.title, e.shortDescription, e.desc, e.seasonName, e.episodeNumber, e.videoThumbnailUrl FROM Episode e, Position p WHERE p.programUrl = ? AND e.programUrl = p.programUrl AND e.publicationId = p.publicationId AND e.videoId = p.videoId ORDER BY p.lastSeen DESC;
